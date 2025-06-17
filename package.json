@@ -1,5 +1,5 @@
 {
-  "homepage": "https://profWilliamArte.github.io/themovie2025", 
+  "homepage": "https://profWilliamArte.github.io/themovie2025",
   "name": "themovie",
   "private": true,
   "version": "0.0.0",
@@ -9,8 +9,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+		"predeploy": "npm run build",
+			"deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "bootstrap": "^5.3.3",
