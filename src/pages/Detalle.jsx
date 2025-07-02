@@ -2,19 +2,19 @@ import { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import YouTube from "react-youtube";
 import CardActores from "../components/CardActores";
+import ReactMarkdown from 'react-markdown';
 
 const Detalle = () => {
     const [datos, setDatos] = useState([]);
-    const [datavideo, setDatavideo] = useState({})
+
     const [datareparto, setDatareparto] = useState({});
     const [dataproduccion, setdProduccion] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [playtrailer, setPlaytrailer] = useState(false)
+
     const [trailers, setTrailers] = useState([]);
     const [selectedTrailer, setSelectedTrailer] = useState(null);
 
-    const [showModal, setShowModal] = useState(false); // Controla el modal
 
 
 
@@ -40,12 +40,40 @@ const Detalle = () => {
             }
             const data = await response.json();
             setDatos(data);
+            console.log("Datos de la película/serie:", data);
+
+            const Pelicula = data.original_title || data.name;
+            console.log("Pelicula:", data.original_title || data.name);
+
+
+
             setLoading(false);
         } catch (err) {
             setError(err.message);
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        const handleHiddenModal = () => {
+            setSelectedTrailer(null); // Limpiar selección
+        };
+
+        const modalEl = document.getElementById('modalVerTrailer');
+        if (modalEl) {
+            modalEl.addEventListener('hidden.bs.modal', handleHiddenModal);
+        }
+
+        return () => {
+            if (modalEl) {
+                modalEl.removeEventListener('hidden.bs.modal', handleHiddenModal);
+            }
+        };
+    }, []);
+
+    const [isLoading, setIsLoading] = useState(false);
+
+
     const getVideo = async () => {
         try {
             const response = await fetch(APIVideos);
@@ -69,12 +97,12 @@ const Detalle = () => {
         try {
             const response = await fetch(APICredits);
             const data = await response.json();
-           
+
 
             const sortedCast = [...data.cast].sort((a, b) =>
-            b.popularity - a.popularity
-        );
-            
+                b.popularity - a.popularity
+            );
+
             setDatareparto(sortedCast);
             setdProduccion(data.crew);
 
@@ -110,21 +138,8 @@ const Detalle = () => {
 
 
     const ruta = "https://image.tmdb.org/t/p/original/";
-    const rutaPel = "/peliculas/";
-    const renderTrailer = () => {
 
 
-        return (
-            <YouTube videoId={trailerkey}
-                className={"youtube-container"}
-                opts={{
-                    width: "100%",
-                    height: "100%"
-                }}
-            />
-        )
-
-    }
     function formatDateToLocal(dateString) {
         const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
         const date = new Date(dateString);
@@ -156,6 +171,33 @@ const Detalle = () => {
             </div>
         );
     }
+
+
+
+    const parseResponse = (text) => {
+        if (!text) return null;
+
+        // Dividir en párrafos
+        const paragraphs = text.split(/\n\s*\n/);
+
+        return paragraphs.map((paragraph, i) => {
+            // Convertir *palabras* en <strong>
+            const strongText = paragraph.replace(/\*(.+?)\*/g, '<strong>$1</strong>');
+
+            return (
+                <p key={i} dangerouslySetInnerHTML={{ __html: strongText }} />
+            );
+        });
+    };
+    const handleTrailerClick = (trailer) => {
+        setSelectedTrailer(trailer);
+        // Usamos setTimeout para asegurar que el modal esté listo
+        setTimeout(() => {
+            const modal = new window.bootstrap.Modal(document.getElementById('modalVerTrailer'));
+            modal.show();
+        }, 100);
+    };
+
     return (
         <div className="bg-dark text-white">
             <div className="banner" style={{ backgroundImage: "url(" + ruta + datos.backdrop_path + ")" }}>
@@ -180,21 +222,24 @@ const Detalle = () => {
                     <p className="banner_descripcion">{datos.overview}</p>
 
                     <div className="my-3">
-                        {trailers.length > 0 && (
-                            <button
-                                className="btn btn-danger me-2"
-                                data-bs-toggle="modal"
-                                data-bs-target="#modalTrailers"
-                                onClick={() => {
-                                    if (trailers.length > 0) {
-                                        setSelectedTrailer(trailers[0]); // Seleccionar el primer tráiler solo al hacer clic
-                                    }
-                                }}
-                            >
-                                Ver Trailers
-                            </button>
-                        )}
-                        <button className="btn btn-secondary" onClick={() => navigate(-1)}>
+
+                        <div className="d-flex ">
+                            {trailers.length > 0 ? (
+                                trailers.slice(0, Math.min(trailers.length, 5)).map((t, index) => (
+                                    <button
+                                        key={index}
+                                        className="btn btn-danger me-2"
+                                        onClick={() => handleTrailerClick(t)}
+                                    >
+                                        Ver Trailer {index + 1}
+                                    </button>
+                                ))
+                            ) : (
+                                <p className="text-warning">No hay trailers disponibles</p>
+                            )}
+
+                        </div>
+                        <button className="btn btn-secondary mt-3" onClick={() => navigate(-1)}>
                             Regresar
                         </button>
 
@@ -204,6 +249,7 @@ const Detalle = () => {
                     )}
                 </div>
             </div>
+
             {Array.isArray(datareparto) && (
 
                 <section className="container  py-5">
@@ -211,10 +257,10 @@ const Detalle = () => {
                     <h3 className="text-center text-white py-4">Reparto de la pelicula ({Array.isArray(datareparto) && datareparto.length}) actores</h3>
                     <div className="row row-cols-lg-6 m-2 justify-content-center">
                         {datareparto.map((item, index) => (
-                        item.profile_path && item.profile_path !== "" ? (
-                        <CardActores key={index} item={item} />
-                         ) : null
-                    ))}
+                            item.profile_path && item.profile_path !== "" ? (
+                                <CardActores key={index} item={item} />
+                            ) : null
+                        ))}
                     </div>
                 </section>
             )}
@@ -239,26 +285,12 @@ const Detalle = () => {
                                                         <b>Departamento: </b>
                                                         {item.department}<br /><br />
                                                         <b>Cargo:</b> {item.job}<br /><br />
-
-
                                                     </p>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-
-
-
-
-
-
-
-
-
-
-
-
                             ) : null
                         ))}
                     </div>
@@ -267,44 +299,42 @@ const Detalle = () => {
             )}
 
 
-            {/* Modal de Trailers */}
-            {trailers.length > 0 && (
-                <div className="modal fade" id="modalTrailers" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                    <div className="modal-dialog modal-xl">
+
+
+            {/* Modal para mostrar el tráiler seleccionado */}
+            {/* Modal del reproductor */}
+            {selectedTrailer && (
+                <div className="modal fade" id="modalVerTrailer" tabIndex="-1" aria-hidden="true">
+                    <div className="modal-dialog modal-xl modal-dialog-centered">
                         <div className="modal-content bg-dark text-white">
                             <div className="modal-header">
-                                <h5 className="modal-title" id="exampleModalLabel">Selecciona un Trailer</h5>
-                                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                <h5 className="modal-title">{selectedTrailer.name || 'Reproduciendo Trailer'}</h5>
+                                <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
-                            <div className="modal-body">
-                                {/* Selector de tráilers */}
-                                <div className="mb-4 text-center">
-                                    <h5>Elige un trailer:</h5>
-                                    <div className="d-flex justify-content-center flex-wrap gap-2">
-                                        {trailers.map((t, index) => (
-                                            <button
-                                                key={index}
-                                                className={`btn btn-sm ${selectedTrailer?.key === t.key ? "btn-primary" : "btn-outline-light"}`}
-                                                onClick={() => setSelectedTrailer(t)}
-                                            >
-                                                Trailer {index + 1}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Reproductor */}
-                                {selectedTrailer && (
-                                    <YouTube
-                                        videoId={selectedTrailer.key}
-                                        className="youtube-container"
-                                        opts={{
-                                            width: "100%",
-                                            height: "700px",
-                                            playerVars: { autoplay: 1 },
-                                        }}
-                                    />
-                                )}
+                            <div className="modal-body text-center p-0">
+                                <YouTube
+                                    key={selectedTrailer.key}
+                                    videoId={selectedTrailer.key}
+                                    opts={{
+                                        width: "100%",
+                                        height: "500px",
+                                        playerVars: {
+                                            autoplay: 1,
+                                            modestbranding: 1,
+                                            rel: 0,
+                                        },
+                                    }}
+                                    onStateChange={(event) => {
+                                        // Si el video está terminado o pausado, lo limpiamos al cerrar el modal
+                                        const modalEl = document.getElementById("modalVerTrailer");
+                                        if (modalEl) {
+                                            modalEl.addEventListener("hidden.bs.modal", () => {
+                                                event.target.stopVideo(); // Detiene el video cuando se cierra el modal
+                                                setSelectedTrailer(null); // Opcional: resetear selección
+                                            });
+                                        }
+                                    }}
+                                />
                             </div>
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
@@ -313,8 +343,6 @@ const Detalle = () => {
                     </div>
                 </div>
             )}
-
-
 
         </div>
     )

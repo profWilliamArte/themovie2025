@@ -21,9 +21,11 @@ const Tendencias = () => {
 
     const param = useParams();
     let tipo = param.tipo; 
+
     if(!tipo) {
         tipo="tendenciasCine"
     }
+
     let titulo = "Tendencias en el Cine";
     let API='https://api.themoviedb.org/3/trending/movie/day?api_key=ecbcdcf9044928d12b179d9153f5a269&language=es-VE'
     let cineoTv = 'cine';

@@ -5,5 +5,5 @@ import react from '@vitejs/plugin-react-swc'
 export default defineConfig({
   plugins: [react()],
   //base: '/tu-proyecto-react/', // <-- nombre del repositorio
-  base: "https://profWilliamArte.github.io/themovie2025",
+  //base: "https://profWilliamArte.github.io/themovie2025",
 });

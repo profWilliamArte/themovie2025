@@ -17,14 +17,14 @@ const App = () => {
       <div className="app">
         <Header/>
           <Routes>
-              <Route path="/themovie2025" element={<Tendencias />} />
+              <Route path="/" element={<Tendencias />} />
               <Route path="/tendencias/:tipo" element={<Tendencias />} />
               <Route path="/generos/:tipo/:genero/:id" element={<Generos />} />
               <Route path="/detalle/:tipo/:id" element={<Detalle/>} />
               <Route path="/peliculas/:id/:actor" element={<Peliculas/>} />
-               <Route path="/actores" element={<Actores/>} />
-                <Route path="/busquedas" element={<Busquedas/>} />
-              <Route path="*" element={<Error404 />} />
+              <Route path="/actores" element={<Actores/>} />
+              <Route path="/busquedas" element={<Busquedas/>} />
+              <Route path="*" element={<Tendencias />} />
 
 
           </Routes>
